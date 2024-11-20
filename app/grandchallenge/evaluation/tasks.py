@@ -52,8 +52,18 @@ def create_evaluation(*, submission_pk, max_initial_jobs=1):  # noqa: C901
     submission = Submission.objects.get(pk=submission_pk)
 
     if submission.phase.external_evaluation:
+        try:
+            requires_memory_gb = submission.phase.evaluation_requires_memory_gb
+            if requires_memory_gb is None:
+                raise ValueError("requires_memory_gb is None")
+        except Exception:
+            requires_memory_gb = 4
         external_evaluation, created = Evaluation.objects.get_or_create(
-            submission=submission
+            submission=submission,
+            defaults={
+                "time_limit": submission.phase.evaluation_time_limit,
+                "requires_memory_gb": requires_memory_gb,
+            },
         )
         if not created:
             logger.info(
@@ -81,13 +91,20 @@ def create_evaluation(*, submission_pk, max_initial_jobs=1):  # noqa: C901
         return
 
     try:
+        try:
+            requires_memory_gb = submission.phase.evaluation_requires_memory_gb
+            if requires_memory_gb is None:
+                raise ValueError("requires_memory_gb is None")
+        except Exception:
+            requires_memory_gb = 4  # Default value if any exception occurs
+
         evaluation = Evaluation.objects.create(
             submission=submission,
             method=method,
             ground_truth=submission.phase.active_ground_truth,
             time_limit=submission.phase.evaluation_time_limit,
             requires_gpu_type=submission.phase.evaluation_requires_gpu_type,
-            requires_memory_gb=submission.phase.evaluation_requires_memory_gb,
+            requires_memory_gb=requires_memory_gb,
         )
     except IntegrityError:
         logger.error(
@@ -208,6 +225,12 @@ def create_algorithm_jobs_for_evaluation(*, evaluation_pk, max_jobs=1):
     )
 
     evaluation.update_status(status=Evaluation.EXECUTING_PREREQUISITES)
+    try:
+        requires_memory_gb = evaluation.submission.phase.evaluation_requires_memory_gb
+        if requires_memory_gb is None:
+            raise ValueError("requires_memory_gb is None")
+    except Exception:
+        requires_memory_gb = 4  # Default value if any exception occurs
 
     jobs = create_algorithm_jobs(
         algorithm_image=evaluation.submission.algorithm_image,
@@ -233,7 +256,7 @@ def create_algorithm_jobs_for_evaluation(*, evaluation_pk, max_jobs=1):
         max_jobs=max_jobs,
         time_limit=evaluation.submission.phase.algorithm_time_limit,
         requires_gpu_type=evaluation.submission.algorithm_requires_gpu_type,
-        requires_memory_gb=evaluation.submission.algorithm_requires_memory_gb,
+        requires_memory_gb=requires_memory_gb,
     )
 
     if not jobs:

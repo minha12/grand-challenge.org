@@ -75,6 +75,34 @@ def _setup_public_storage():
         )
 
 
+def attach_policy(host_alias, policy_name, user):
+    result = subprocess.run(
+        [
+            "mc",
+            "admin",
+            "policy",
+            "attach",
+            host_alias,
+            policy_name,
+            "--user",
+            user,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+    )
+
+    if result.returncode != 0:
+        error_message = result.stderr.strip()
+        if "The specified policy change is already in effect" in error_message:
+            print(f"Policy '{policy_name}' is already attached to user '{user}'. Continuing...")
+        else:
+            print(f"Error attaching policy '{policy_name}' to user '{user}': {error_message}")
+            sys.exit(1)
+    else:
+        print(f"Policy '{policy_name}' attached to user '{user}' successfully.")
+
+
 def _setup_components_storage():
     """
     Add a user and IAM role for the components storage
@@ -134,6 +162,7 @@ def _setup_components_storage():
             ]
         )
 
+    # Add user
     subprocess.check_call(
         [
             "mc",
@@ -146,15 +175,16 @@ def _setup_components_storage():
         ]
     )
 
-    subprocess.check_call(
-        [
-            "mc",
-            "admin",
-            "policy",
-            "attach",
-            host_alias,
-            policy_name,
-            "--user",
-            settings.COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID,
-        ]
+    # Attach the policy to the user using the helper function
+    attach_policy(
+        host_alias,
+        policy_name,
+        settings.COMPONENTS_DOCKER_TASK_AWS_ACCESS_KEY_ID,
+    )
+
+    # Attach the policy to 'componentstask' user using the helper function
+    attach_policy(
+        "local",
+        "components",
+        "componentstask",
     )

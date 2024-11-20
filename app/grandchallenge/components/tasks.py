@@ -1054,6 +1054,10 @@ def preload_interactive_algorithms():
     from grandchallenge.reader_studies.models import Question
     from grandchallenge.workstations.models import Session
 
+    if settings.INTERACTIVE_ALGORITHMS_LAMBDA_FUNCTIONS is None:
+        logger.warning("INTERACTIVE_ALGORITHMS_LAMBDA_FUNCTIONS is not configured.")
+        return
+    
     region_name = settings.INTERACTIVE_ALGORITHMS_LAMBDA_FUNCTIONS[
         "region_name"
     ]

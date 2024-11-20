@@ -115,7 +115,7 @@ external_algorithm_evaluation_fixtures:
 	docker compose run \
 		-v $(shell readlink -f ./scripts/):/app/scripts:ro \
 		--rm \
-		celery_worker_evaluation \
+		celery_worker \
 		python manage.py runscript external_algorithm_evaluation_fixtures
 
 cost_fixtures:

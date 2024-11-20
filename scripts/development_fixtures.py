@@ -498,7 +498,7 @@ def _create_user_tokens(users):
 
         AuthToken(
             token_key=token[: CONSTANTS.TOKEN_KEY_LENGTH],
-            digest=digest,
+            key=digest,
             user=users[user],
             expiry=None,
         ).save()
