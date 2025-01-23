@@ -87,13 +87,16 @@ services:
             && nginx -g 'daemon off;'"
         restart: always
         ports:
-            - "127.0.0.1:80:80"
-            - "127.0.0.1:443:443"
+            - "80:80"
+            - "443:443"
         depends_on:
             web:
                 condition: service_started
             workstation-proxy:
                 condition: service_started
+        networks:
+            - default
+            - shared_network
 
     redis:
         image: redis:5.0
@@ -216,6 +219,8 @@ networks:
     components:
         name: "grand-challengeorg_components"
         internal: true
+    shared_network:
+        external: true
 
 volumes:
     pytest-cache:
