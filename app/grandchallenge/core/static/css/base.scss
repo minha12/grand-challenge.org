@@ -18,6 +18,7 @@ $pagination-disabled-bg: lighten($blue, 15%) !default;
 @import "../vendored/bootswatch/dist/flatly/variables";
 @import "../vendored/bootstrap/scss/bootstrap";
 @import "../vendored/bootswatch/dist/flatly/bootswatch";
+@import "datatables";
 
 // Fix https://github.com/comic/grand-challenge.org/issues/1201
 .custom-select {
@@ -41,4 +42,27 @@ $pagination-disabled-bg: lighten($blue, 15%) !default;
 // Reserve space for focus box-shadow
 .btn {
     margin: $btn-focus-width;
+}
+
+blockquote {
+    padding: 0 $spacer;
+    font-size: inherit !important;
+    border-left: $spacer * .25 solid $primary;
+    color: $primary;
+}
+
+div.codehilite {
+    margin-bottom: $paragraph-margin-bottom;
+}
+
+.docpage h3:first-of-type {
+    text-align: center;
+}
+
+.docpage h3:has(+h4){
+    margin-bottom: 2 * $paragraph-margin-bottom;
+}
+
+.docpage :is(h1, h2, h3, h4, h5, h6) {
+    font-weight: bold;
 }

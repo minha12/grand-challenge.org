@@ -1,11 +1,18 @@
 import pytest
 
 from grandchallenge.cases.models import RawImageUploadSession
-from grandchallenge.components.models import InterfaceKind
+from grandchallenge.components.models import (
+    ComponentInterfaceValue,
+    InterfaceKind,
+)
 from grandchallenge.components.serializers import (
     ComponentInterfaceValuePostSerializer,
+    ComponentInterfaceValueSerializer,
 )
-from tests.components_tests.factories import ComponentInterfaceFactory
+from tests.components_tests.factories import (
+    ComponentInterfaceFactory,
+    ComponentInterfaceValueFactory,
+)
 from tests.factories import ImageFactory, UploadSessionFactory, UserFactory
 
 TEST_DATA = {
@@ -468,3 +475,69 @@ def test_civ_post_image_valid(kind, rf):
 
     # verify
     assert serializer.is_valid()
+
+
+@pytest.mark.django_db
+def test_civ_serializer_list_ordering():
+
+    civs = [
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.IMAGE,
+                title="B Image Interface",
+                store_in_database=False,
+            )
+        ),
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.IMAGE,
+                title="A Image Interface",
+                store_in_database=False,
+            )
+        ),
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.THUMBNAIL_PNG,
+                store_in_database=False,
+            )
+        ),
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.ZIP,
+                store_in_database=False,
+            )
+        ),
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.STRING
+            ),
+            value="bar",
+        ),
+        ComponentInterfaceValueFactory(
+            interface=ComponentInterfaceFactory(
+                kind=InterfaceKind.InterfaceKindChoices.CHART
+            ),
+            value="foo",
+        ),
+    ]
+
+    serializer = ComponentInterfaceValueSerializer(many=True)
+
+    produced_order = serializer.to_representation(
+        data=ComponentInterfaceValue.objects.filter(
+            pk__in=[civ.pk for civ in civs]
+        )
+    )
+
+    expected_order = [
+        civs[4],
+        civs[2],
+        civs[5],
+        civs[3],
+        civs[1],
+        civs[0],
+    ]
+
+    assert [civ["interface"]["slug"] for civ in produced_order] == [
+        civ.interface.slug for civ in expected_order
+    ]

@@ -10,7 +10,8 @@ from django.utils import timezone
 from django.utils.timezone import now
 
 from grandchallenge.algorithms.models import Job
-from grandchallenge.components.models import ComponentInterface, GPUTypeChoices
+from grandchallenge.components.models import ComponentInterface
+from grandchallenge.components.schemas import GPUTypeChoices
 from grandchallenge.evaluation.models import (
     SUBMISSION_WINDOW_PARENT_VALIDATION_TEXT,
     CombinedLeaderboard,
@@ -462,7 +463,11 @@ def test_open_for_submission(
     open_for_submissions,
     expected_status,
 ):
-    phase = PhaseFactory()
+    PhaseFactory()
+
+    # Annotate the compute costs
+    phase = Phase.objects.get()
+
     phase.submissions_limit_per_user_per_period = (
         submissions_limit_per_user_per_period
     )

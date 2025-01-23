@@ -119,12 +119,20 @@ USE_TZ = True
 # Use AutoField for backwards compatibility
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
+DOCUMENTATION_HELP_VIEWER_CONTENT_SLUG = os.environ.get(
+    "DOCUMENTATION_HELP_VIEWER_CONTENT_SLUG", "viewer-content"
+)
+
 # General forum
 DOCUMENTATION_HELP_FORUM_PK = os.environ.get(
     "DOCUMENTATION_HELP_FORUM_PK", "1"
 )
 DOCUMENTATION_HELP_FORUM_SLUG = os.environ.get(
     "DOCUMENTATION_HELP_FORUM_SLUG", "general"
+)
+
+DOCUMENTATION_HELP_INTERFACES_SLUG = os.environ.get(
+    "DOCUMENTATION_HELP_INTERFACES_SLUG", "interfaces"
 )
 
 # About Flatpage
@@ -787,7 +795,11 @@ MARKDOWN_POST_PROCESSORS = []
 MARKDOWNX_MARKDOWNIFY_FUNCTION = (
     "grandchallenge.core.templatetags.bleach.md2html"
 )
-MARKDOWNX_MARKDOWN_EXTENSION_CONFIGS = {}
+MARKDOWNX_MARKDOWN_EXTENSION_CONFIGS = {
+    "markdown.extensions.codehilite": {
+        "wrapcode": False,
+    }
+}
 MARKDOWNX_IMAGE_MAX_SIZE = {"size": (2000, 0), "quality": 90}
 MARKDOWNX_EDITOR_RESIZABLE = "False"
 
@@ -1095,6 +1107,9 @@ COMPONENTS_NVIDIA_VISIBLE_DEVICES = os.environ.get(
 )
 COMPONENTS_CONTAINER_PLATFORM = "linux/amd64"
 
+COMPONENTS_VIRTUAL_ENV_BIOM_LOCATION = os.environ.get(
+    "COMPONENTS_VIRTUAL_ENV_BIOM_LOCATION", "/opt/virtualenvs/biom"
+)
 # Set which template pack to use for forms
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"

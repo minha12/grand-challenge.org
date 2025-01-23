@@ -1,6 +1,6 @@
 {
   "lock_version": "1.0",
-  "content_hash": "sha256:05362dd42a39941270e366ce0673eda17e4848e72943e01d624bd6a84be87497",
+  "content_hash": "sha256:55376154d6570a2830cb23147f93b61f4d43d3af635c6e3c4e1c7845d964c6bd",
   "dependencies": [
     {
       "name": "@github/markdown-toolbar-element",
@@ -431,177 +431,105 @@
       "maps": []
     },
     {
-      "name": "cornerstone-core",
-      "version": "2.2.4",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "dist/cornerstone.js",
-          "sri": "sha384-V9P/aL0q9pHtJ5T6nu+lMhECpty2o5AHEDsqq5ByENSdmSVczBubXTeqWusnVfQ8"
-        },
-        {
-          "name": "dist/cornerstone.js.map",
-          "sri": "sha384-1vkwCAGusYzE592znPE8lVIZQAPV/7DF6JckMwbfg6pXgMDch/7EKUj4Vz6BT699"
-        },
-        {
-          "name": "dist/cornerstone.min.js",
-          "sri": "sha384-axIAanIpsk+TbLbn7RXaEMJEsc0w/DJg4nIxSU87gwHTbYiGiAqm0UEkXMfO3+xV"
-        },
-        {
-          "name": "dist/cornerstone.min.js.map",
-          "sri": "sha384-7j+1ToNLmDfbvDDhe8Xj6QrLI7jx/RISJuwhPaYebm4tk8b99+3pDprBADX+KkYe"
-        }
-      ],
-      "maps": []
-    },
-    {
-      "name": "cornerstone-math",
-      "version": "0.1.6",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "dist/cornerstoneMath.js",
-          "sri": "sha384-t6p6Opmh59HFuC9TXYcExw8Y9+ktPG19qZbANsHnyykXOEwQBDcocYRU3xv85e+7"
-        },
-        {
-          "name": "dist/cornerstoneMath.js.map",
-          "sri": "sha384-1hXv23Bk4Wof0LUgtFqI/ae3HZE66aoLAVXgSM9ou3jp78g+v+7J9VkKyiPF3ODv"
-        },
-        {
-          "name": "dist/cornerstoneMath.min.js",
-          "sri": "sha384-b8DtrZnVyBc7YpJXY9bYyIw5wSFgxX2VlFYmGX9z0laMaBQRRWVH6BCxKhV8ETfz"
-        },
-        {
-          "name": "dist/cornerstoneMath.min.js.map",
-          "sri": "sha384-lFVUKZBwft7C7BClSfHzU//h02ySP98vJTy/KlcEgieEx8IE3AD53GO1GLoRl+7g"
-        }
-      ],
-      "maps": []
-    },
-    {
       "name": "datatables.net",
-      "version": "1.11.3",
+      "version": "2.1.8",
       "provider": "unpkg",
       "assets": [
         {
-          "name": "js/jquery.dataTables.js",
-          "sri": "sha384-ffdocMECdI5Mr/PiXXjgHO0Yj4n6iCzP4ivRh4iF3pxOS4iLTGyYImqTNMjcvgCQ"
+          "name": "js/dataTables.js",
+          "sri": "sha384-cDXquhvkdBprgcpTQsrhfhxXRN4wfwmWauQ3wR5ZTyYtGrET2jd68wvJ1LlDqlQG"
         },
         {
-          "name": "js/jquery.dataTables.min.js",
-          "sri": "sha384-Ys7dhgZ13dNQE2uo7PY+FIKiwwu0WNSnKCAOPPNoC9KT+fW+OAh+Ym0z3eiREmpZ"
+          "name": "js/dataTables.min.js",
+          "sri": "sha384-MgwUq0TVErv5Lkj/jIAgQpC+iUIqwhwXxJMfrZQVAOhr++1MR02yXH8aXdPc3fk0"
         }
       ],
       "maps": []
     },
     {
       "name": "datatables.net-bs4",
-      "version": "1.11.3",
+      "version": "2.1.8",
       "provider": "unpkg",
       "assets": [
         {
           "name": "css/dataTables.bootstrap4.css",
-          "sri": "sha384-EvIr2PlbcGMb0zxwU9/FJBagUw3KateXm545CaPe5guMZKVKKaK2VRpFVSbcL+ym"
+          "sri": "sha384-1QBwR4jM75CjZBwJk69i7nwaVySAvCxM2yILRHu7b4Q0YMsRSRX405VX7dCiay52"
         },
         {
           "name": "css/dataTables.bootstrap4.min.css",
-          "sri": "sha384-d9W9+gJYgHf3dPgkLbdt0l6ohsATXXYEBZNKxeJj6aybLr8PFOCHFXFWtVMXeXP3"
+          "sri": "sha384-0KscpVDhBnNtS+8A0GBYhIcV5+eSYeo2IhiT53C+ztHx7PGbwekJz3qcyk0HVqHs"
         },
         {
           "name": "js/dataTables.bootstrap4.js",
-          "sri": "sha384-yh2DKHGQ1YQGa6VRaEQmJkz4wJnrPoPlF+qWvcav0Af/ynTt2JMP8/0P2T0Y/67u"
+          "sri": "sha384-zNhLQXVfbsNMy4yxmaWgoZ7RVDmzTYQ3/y1HXPwR2sakXOh563PWfrivaYmDAzDz"
         },
         {
           "name": "js/dataTables.bootstrap4.min.js",
-          "sri": "sha384-bX64nQ/u/Jovgh0rdhdtHy2BMWv9TOOds6b4reiVcJ0KcA76JdIxmwar1pN2NsUj"
+          "sri": "sha384-lzE84zE76t/xTDUpoKl8o6c0h10nNP8YllhiEMM0c/sSn4F16OzlMehMoHkVTsTN"
         }
       ],
       "maps": []
     },
     {
       "name": "datatables.net-buttons",
-      "version": "2.0.1",
+      "version": "3.2.0",
       "provider": "unpkg",
       "assets": [
         {
           "name": "js/buttons.colVis.js",
-          "sri": "sha384-AbV5HVbLCLmZJidGbIdYIXa+jUM76ualbJ9VxjEk1XApV0QD4kBJ03Okikmvcps0"
+          "sri": "sha384-i6Z7TESDTMWWMiPn4glNtpuvZKnfRC8IRXtzYgtiFgpuLgRPoUyRO4uJJ8H22IyH"
         },
         {
           "name": "js/buttons.colVis.min.js",
-          "sri": "sha384-enGTgEZOvC7C8P91Jt/27n1V3xD5SIzGi1e+DzYJvAts546YTsj3CNmnL0G/zlVn"
+          "sri": "sha384-LC8PmH0Tdjy6c1Hesl75hUSKQuoIo3PCAr3svr0xJ4y90sNaTEMLK5n68Fl5VBqB"
         },
         {
           "name": "js/dataTables.buttons.js",
-          "sri": "sha384-8LM8BoZwX5XkG/uPMRUUlo5btOd9W42awa7ky9qUj7B7r7IXLYoxnZnDNMfypbrX"
+          "sri": "sha384-m1YnvBcNGjKAtJ9d9O4s6EuBhKPlLADOZwIu9q7rZBl9d52CUmsHElEO7fNmajv9"
         },
         {
           "name": "js/dataTables.buttons.min.js",
-          "sri": "sha384-MGimb05YiSGNcXiLlj03UNahXBECHmFTe5iVBqh6sf2G7ccabI3/EOqzBnNw97/T"
+          "sri": "sha384-1yo9s/77ZWiY2Xvn1BPaWyS3ErmUO+k734D+PxbLD2Iv8WJt4miQdnhv8IiMMY7j"
         }
       ],
       "maps": []
     },
     {
       "name": "datatables.net-buttons-bs4",
-      "version": "2.0.1",
+      "version": "3.2.0",
       "provider": "unpkg",
       "assets": [
         {
           "name": "css/buttons.bootstrap4.css",
-          "sri": "sha384-q4EZq/gM8ljWYtB8R40hnwfyZj3WIvbcEzgREtSQVdAsOtwP9LvOtwsUVjgY/U8S"
+          "sri": "sha384-fpLaDkiKo85dyvJ2qKPGz+2rJlKiBUbgeu7UQ+Ka2wjB8r1zn9scWvltGqppEARE"
         },
         {
           "name": "css/buttons.bootstrap4.min.css",
-          "sri": "sha384-edc+aE6Ik81hVXxTAc5hJy5+51r8isS15Bg5ABuEQvzK/WJKD4OGi6rHI49qr3y8"
+          "sri": "sha384-3tdfacHAFSZHsvYb3sbANSxCJHbmLfOFbrdLuSrPG6avz0/yEu68qMSY0dupV7zK"
         },
         {
           "name": "js/buttons.bootstrap4.js",
-          "sri": "sha384-IMnD0fgb6WzFOenYYLbPmzMvsBZupbK31cTb1Jx9J5WJ0jIG+wfLvHIH75coZEYp"
+          "sri": "sha384-slk9S0+eL62v+SlIlVYXXMej29KaVsy4K59oNptoqxIypW6ZAHIqwOXUPC89A1ug"
         },
         {
           "name": "js/buttons.bootstrap4.min.js",
-          "sri": "sha384-39HSGlFa/ZBzWGrpbpXEnLn7D25fRe7nSgMuD9OovM0Hmm/73enw1iF3zgQfJ9OZ"
+          "sri": "sha384-1oeq8jb8l26AfnhvoQ1kcuVi2ty/y+QuzyJCi5E+GC31PymbE9QEla3XuYTwZHBC"
         }
       ],
       "maps": []
     },
     {
-      "name": "datatables.net-responsive",
-      "version": "2.2.9",
+      "name": "floating-scroll",
+      "version": "3.2.0",
       "provider": "unpkg",
       "assets": [
         {
-          "name": "js/dataTables.responsive.js",
-          "sri": "sha384-eY9M0GbvpniuOcFCVB7On6oTCecP/MaxuJZhhsKhE/hESC989j4Tnk2FaA8NZ8qc"
+          "name": "dist/jquery.floatingscroll.css",
+          "sri": "sha384-IhiSZ9rydjTj1D6ZswgB2pCL8hba3n2U7ljG1A0IOaLieaahZNTCTyBEkTECkPaL"
         },
         {
-          "name": "js/dataTables.responsive.min.js",
-          "sri": "sha384-ziUH70yXeghwn7LIJvtjobzpllxs+w4FJL4/ssbFYWoYof46CveVyQ+GCaR1eTXj"
-        }
-      ],
-      "maps": []
-    },
-    {
-      "name": "datatables.net-responsive-bs4",
-      "version": "2.2.9",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "css/responsive.bootstrap4.css",
-          "sri": "sha384-FG1U1mmuc4wFohqjCo1SISm217nX0ImWshs+Wu6nFbi/Me23QK9QnZM9ffbOi0N7"
-        },
-        {
-          "name": "css/responsive.bootstrap4.min.css",
-          "sri": "sha384-lePQI47qegn3yPIKwMvp5YLKtqliO3UWhA8XdAuPyDLLD41HBbdLmNHXco/IMAok"
-        },
-        {
-          "name": "js/responsive.bootstrap4.js",
-          "sri": "sha384-+u4gb6q8N/RnCi1rp9KpC+RNKEySqC0ASHSScqmY/C7vZnrJYM7hKPnl+Og6AKCK"
-        },
-        {
-          "name": "js/responsive.bootstrap4.min.js",
-          "sri": "sha384-iqV3x/YAPev0L8Y35rZF1e8LuilKG+h0gtjkpS6dr6HFEZ139n6Q8YcFQ3kZfKu/"
+          "name": "dist/jquery.floatingscroll.min.js",
+          "sri": "sha384-gS4dgnfbPsSGHw07CtiuYGt7z8RfOScrwZbvmFGEVblveZgbTwScK+29f9wBreQV"
         }
       ],
       "maps": []
@@ -719,34 +647,6 @@
       "maps": []
     },
     {
-      "name": "itk-vtk-viewer",
-      "version": "11.11.2",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "dist/itkVtkViewerCDN.js",
-          "sri": "sha384-LTeflmm51FBGPPQClZZuYQKlisKD6AINeDUXFQxyoY0UsU/acHZnhG99cV4bjIvX"
-        }
-      ],
-      "maps": []
-    },
-    {
-      "name": "itk-wasm",
-      "version": "1.0.0-a.10",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "dist/umd/itk-wasm.js",
-          "sri": "sha384-f2/1X/J50zy+SOILsk/35q8j6EJMHjfhJSyEevmMi1vMz7bKr9EOJh8cKTKV2Oqn"
-        },
-        {
-          "name": "dist/umd/itk-wasm.min.js",
-          "sri": "sha384-g5R6BnQF/3Ypnj8/lpb91MkaPdBIBbl/lZJzTWFPKVuUmPofyszDh4X8rk8XcPi3"
-        }
-      ],
-      "maps": []
-    },
-    {
       "name": "jquery",
       "version": "3.7.0",
       "provider": "cdnjs",
@@ -784,7 +684,7 @@
     },
     {
       "name": "jsoneditor",
-      "version": "9.5.2",
+      "version": "10.1.1",
       "provider": "cdnjs",
       "assets": [
         {
@@ -793,19 +693,19 @@
         },
         {
           "name": "jsoneditor.css",
-          "sri": "sha512-7BNBvfwEnG/+oK7PTxRr4I5f7SQQjYdnGjLe1F4kjNU9m4sXSOxcld4x2NRtgYiYkO+ltKQ1foU5Eau7kSnkVA=="
+          "sri": "sha512-iOFdnlwX6UGb55bU5DL0tjWkS/+9jxRxw2KiRzyHMZARASUSwm0nEXBcdqsYni+t3UKJSK7vrwvlL8792/UMjQ=="
         },
         {
           "name": "jsoneditor.js",
-          "sri": "sha512-L0Ev5uNLTNswQjWgk65iN2z2q5TvDwe3qf5YYLROgs/SrVNfhqs6nwpfo+RXJ/+QM9bh/Acd7x03XvogdX5XFQ=="
+          "sri": "sha512-HePx5/4V5aGOlhxKK/l2O80+a/aHOOxzMIl/SiuPOGfBcbuLDhFwTI1WKk5CijlbvsJuHosMCZNGWik0gE7enw=="
         },
         {
           "name": "jsoneditor.min.css",
-          "sri": "sha512-oEH5lcAN+ZIIBvRXjo3cI689oL9c7HGoLxEkPnzRskQ8lSkKh2aZ/wd6rx//5+dI1eY20mPQPQTEx69UuHBu3Q=="
+          "sri": "sha512-8G+Vb2+10BSrSo+wupdzJIylDLpGtEYniQhp0rsbTigPG7Onn2S08Ai/KEGlxN2Ncx9fGqVHtRehMuOjPb9f8g=="
         },
         {
           "name": "jsoneditor.min.js",
-          "sri": "sha512-sWWNHrucAGzw6+kdky+SP1jIqkzY+bYzZRFn6H0aRw/jyaBKvj4A8hvze0bhSplOtAzY1YZyar8KrK8lDRtUdQ=="
+          "sri": "sha512-ZZTYi+tU/p2AEQSfuloqzXrZZiPkgPrXF1Pcj4OVAm4rsUnUPGme+gga6eAMbzKu+gPa1uciaOVIcxCGIsuLEQ=="
         }
       ],
       "maps": [
@@ -824,190 +724,6 @@
         {
           "name": "moment.min.js",
           "sri": "sha512-i2CVnAiguN6SnJ3d2ChOOddMWQyvgQTzm0qSgiKhOqBMGCx4fGU5BtzXEybnKatWPDkXPFyCI0lbG42BnVjr/Q=="
-        }
-      ],
-      "maps": []
-    },
-    {
-      "name": "openseadragon",
-      "version": "2.4.1",
-      "provider": "cdnjs",
-      "assets": [
-        {
-          "name": "images/button_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/button_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/button_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/button_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/flip_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/flip_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/flip_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/flip_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/fullpage_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/fullpage_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/fullpage_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/fullpage_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/home_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/home_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/home_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/home_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/next_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/next_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/next_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/next_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/previous_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/previous_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/previous_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/previous_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateleft_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateleft_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateleft_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateleft_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateright_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateright_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateright_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/rotateright_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomin_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomin_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomin_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomin_rest.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomout_grouphover.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomout_hover.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomout_pressed.png",
-          "sri": null
-        },
-        {
-          "name": "images/zoomout_rest.png",
-          "sri": null
-        },
-        {
-          "name": "openseadragon.js",
-          "sri": "sha512-wLveiqffVDS+4JWoWKHUFKCw2zUjqsG8dHN8Q72zgGWTed/fLP4NePfxQ3nw1Ewe3hd7mvUIjO3owmLWvZyf2Q=="
-        },
-        {
-          "name": "openseadragon.js.map",
-          "sri": null
-        },
-        {
-          "name": "openseadragon.min.js",
-          "sri": "sha512-ydnIgG69uS1sVDFa1ki6qvOVkc47BmyW3RGoMwn9jATwDIFdIZ8Yuoy/w3IQEv8xzUwqFPs/yNoD2bSaQTGXYg=="
-        },
-        {
-          "name": "openseadragon.min.js.map",
-          "sri": null
         }
       ],
       "maps": []
@@ -1127,18 +843,6 @@
         {
           "name": "vega-lite.min.js.map",
           "sri": null
-        }
-      ],
-      "maps": []
-    },
-    {
-      "name": "world-atlas",
-      "version": "2.0.2",
-      "provider": "unpkg",
-      "assets": [
-        {
-          "name": "countries-110m.json",
-          "sri": "sha384-yOCJ+8ShBm8UDqtAVtAvxTDDf4gXo5edxl/YG0FmVC5OTmqVLl7utuVGBDEeZWHf"
         }
       ],
       "maps": []

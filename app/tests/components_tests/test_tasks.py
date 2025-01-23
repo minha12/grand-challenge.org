@@ -12,6 +12,7 @@ from grandchallenge.algorithms.models import AlgorithmImage, Job
 from grandchallenge.cases.models import RawImageUploadSession
 from grandchallenge.components.models import (
     ComponentInterfaceValue,
+    ComponentJob,
     ImportStatusChoices,
     InterfaceKind,
 )
@@ -25,6 +26,7 @@ from grandchallenge.components.tasks import (
     encode_b64j,
     execute_job,
     preload_interactive_algorithms,
+    remove_container_image_from_registry,
     remove_inactive_container_images,
     update_container_image_shim,
     upload_to_registry_and_sagemaker,
@@ -33,6 +35,7 @@ from grandchallenge.components.tasks import (
 from grandchallenge.core.celery import _retry, acks_late_micro_short_task
 from grandchallenge.notifications.models import Notification
 from grandchallenge.reader_studies.models import InteractiveAlgorithmChoices
+from grandchallenge.uploads.models import UserUpload
 from tests.algorithms_tests.factories import (
     AlgorithmFactory,
     AlgorithmImageFactory,
@@ -46,6 +49,7 @@ from tests.components_tests.factories import (
     ComponentInterfaceValueFactory,
 )
 from tests.evaluation_tests.factories import (
+    EvaluationFactory,
     EvaluationGroundTruthFactory,
     MethodFactory,
     PhaseFactory,
@@ -536,6 +540,7 @@ def test_add_file_to_object(
             linked_task=linked_task,
         )
 
+    assert not UserUpload.objects.filter(pk=us.pk).exists()
     assert ComponentInterfaceValue.objects.filter(interface=ci).count() == 1
     assert "some_async_task" in str(callbacks)
 
@@ -650,7 +655,22 @@ def test_add_file_to_object_updates_job_on_validation_fail(
 
 
 @pytest.mark.django_db
-def test_add_file_to_object_validates_newick(
+@pytest.mark.parametrize(
+    "kind,mock_validator_path",
+    (
+        (
+            InterfaceKind.InterfaceKindChoices.NEWICK,
+            "grandchallenge.components.models.validate_newick_tree_format",
+        ),
+        (
+            InterfaceKind.InterfaceKindChoices.BIOM,
+            "grandchallenge.components.models.validate_biom_format",
+        ),
+    ),
+)
+def test_add_file_to_object_validates_kinds(
+    kind,
+    mock_validator_path,
     settings,
     django_capture_on_commit_callbacks,
     mocker,
@@ -672,16 +692,14 @@ def test_add_file_to_object_validates_newick(
     )
     us.save()
     ci = ComponentInterfaceFactory(
-        kind=InterfaceKind.InterfaceKindChoices.NEWICK,
+        kind=kind,
         store_in_database=False,
     )
 
-    mock_validate_newick = mocker.patch(
-        "grandchallenge.components.models.validate_newick_tree_format"
-    )
+    mock_validator = mocker.patch(mock_validator_path)
 
     # Sanity
-    mock_validate_newick.assert_not_called()
+    mock_validator.assert_not_called()
     assert ComponentInterfaceValue.objects.filter(interface=ci).count() == 0
 
     with django_capture_on_commit_callbacks(execute=True) as callbacks:
@@ -694,7 +712,7 @@ def test_add_file_to_object_validates_newick(
             linked_task=linked_task,
         )
 
-    mock_validate_newick.assert_called_once()
+    mock_validator.assert_called_once()
     assert ComponentInterfaceValue.objects.filter(interface=ci).count() == 1
     assert "some_async_task" not in str(callbacks)
 
@@ -865,3 +883,64 @@ def test_preload_interactive_algorithms(settings):
         )
 
         assert mock_instance.consolidate.call_count == 1
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "image_factory, job_model_factory, image_attribute_name",
+    (
+        (MethodFactory, EvaluationFactory, "method"),
+        (
+            AlgorithmImageFactory,
+            EvaluationFactory,
+            "submission__algorithm_image",
+        ),
+        (
+            AlgorithmImageFactory,
+            AlgorithmJobFactory,
+            "algorithm_image",
+        ),
+    ),
+)
+@pytest.mark.parametrize(
+    "job_status, expected_image_is_in_registry",
+    (
+        (ComponentJob.SUCCESS, False),
+        (ComponentJob.FAILURE, False),
+        (ComponentJob.PENDING, True),
+        (ComponentJob.EXECUTING, True),
+    ),
+)
+def test_remove_container_image_from_registry(
+    image_factory,
+    job_model_factory,
+    image_attribute_name,
+    job_status,
+    expected_image_is_in_registry,
+    mocker,
+):
+    mocker.patch(
+        # remove_tag_from_registry is only implemented for ECR
+        "grandchallenge.components.tasks.remove_tag_from_registry"
+    )
+
+    inactive_image = image_factory(
+        is_in_registry=True, is_manifest_valid=True, is_desired_version=False
+    )
+
+    job_model_factory(
+        **{
+            image_attribute_name: inactive_image,
+            "time_limit": 3600,
+            "status": job_status,
+        }
+    )
+
+    remove_container_image_from_registry(
+        pk=inactive_image.pk,
+        app_label=inactive_image._meta.app_label,
+        model_name=inactive_image._meta.model_name,
+    )
+
+    inactive_image.refresh_from_db()
+    assert inactive_image.is_in_registry is expected_image_is_in_registry

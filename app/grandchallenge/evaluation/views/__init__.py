@@ -97,70 +97,65 @@ class UserCanSubmitAlgorithmToPhaseMixin(VerificationRequiredMixin):
     is open for submissions.
     """
 
-    def test_func(self):
-        response = super().test_func()
-        if response:
-            if not (
-                self.phase.challenge.is_admin(self.request.user)
-                or self.phase.challenge.is_participant(self.request.user)
-            ):
-                error_message = (
-                    "You need to be either an admin or a participant of "
-                    "the challenge in order to create an algorithm for this phase."
-                )
-                messages.error(
-                    self.request,
-                    error_message,
-                )
-                return False
-            elif (
-                self.phase.challenge.is_participant(self.request.user)
-                and not self.phase.challenge.is_admin(self.request.user)
-                and not self.phase.open_for_submissions
-            ):
-                error_message = "The phase is currently not open for submissions. Please come back later."
-                messages.error(
-                    self.request,
-                    error_message,
-                )
-                return False
-            elif (
-                self.phase.challenge.is_admin(self.request.user)
-                and not self.phase.challenge.logo
-            ):
-                error_message = (
-                    "You need to first upload a logo for your challenge "
-                    "before you can create algorithms for its phases."
-                )
-                messages.error(
-                    self.request,
-                    error_message,
-                )
-                return False
-            elif (
-                not self.phase.submission_kind
-                == SubmissionKindChoices.ALGORITHM
-                or not self.phase.algorithm_inputs
-                or not self.phase.algorithm_outputs
-                or not self.phase.archive
-            ):
-                error_message = (
-                    "This phase is not configured for algorithm submission. "
-                )
-                if self.phase.challenge.is_admin(self.request.user):
-                    error_message += "You need to link an archive containing the secret test data to this phase and define the inputs and outputs that algorithms need to read/write. Please get in touch with support@grand-challenge.org to configure these settings."
-                else:
-                    error_message += "Please come back later."
+    def dispatch(self, request, *args, **kwargs):
+        if not (
+            self.phase.challenge.is_admin(request.user)
+            or self.phase.challenge.is_participant(request.user)
+        ):
+            error_message = (
+                "You need to be either an admin or a participant of "
+                "the challenge in order to create an algorithm for this phase."
+            )
+            messages.error(
+                request,
+                error_message,
+            )
+            return self.handle_no_permission()
+        elif (
+            self.phase.challenge.is_participant(request.user)
+            and not self.phase.challenge.is_admin(request.user)
+            and not self.phase.open_for_submissions
+        ):
+            error_message = "The phase is currently not open for submissions. Please come back later."
+            messages.error(
+                request,
+                error_message,
+            )
+            return self.handle_no_permission()
+        elif (
+            self.phase.challenge.is_admin(request.user)
+            and not self.phase.challenge.logo
+        ):
+            error_message = (
+                "You need to first upload a logo for your challenge "
+                "before you can create algorithms for its phases."
+            )
+            messages.error(
+                request,
+                error_message,
+            )
+            return self.handle_no_permission()
+        elif (
+            not self.phase.submission_kind == SubmissionKindChoices.ALGORITHM
+            or not self.phase.algorithm_inputs
+            or not self.phase.algorithm_outputs
+            or not self.phase.archive
+        ):
+            error_message = (
+                "This phase is not configured for algorithm submission. "
+            )
+            if self.phase.challenge.is_admin(request.user):
+                error_message += "You need to link an archive containing the secret test data to this phase and define the inputs and outputs that algorithms need to read/write. Please get in touch with support@grand-challenge.org to configure these settings."
+            else:
+                error_message += "Please come back later."
 
-                messages.error(
-                    self.request,
-                    error_message,
-                )
-                return False
-
-            return True
+            messages.error(
+                request,
+                error_message,
+            )
+            return self.handle_no_permission()
         else:
-            return False
+            return super().dispatch(request, *args, **kwargs)
 
 
 class PhaseCreate(
@@ -213,8 +208,8 @@ class PhaseUpdate(
     queryset = Phase.objects.prefetch_related("optional_hanging_protocols")
 
     def get_object(self, queryset=None):
-        return Phase.objects.get(
-            challenge=self.request.challenge, slug=self.kwargs["slug"]
+        return get_object_or_404(
+            Phase, challenge=self.request.challenge, slug=self.kwargs["slug"]
         )
 
     def get_form_kwargs(self):
@@ -330,8 +325,8 @@ class SubmissionCreate(
 
     @cached_property
     def phase(self):
-        return Phase.objects.get(
-            challenge=self.request.challenge, slug=self.kwargs["slug"]
+        return get_object_or_404(
+            Phase, challenge=self.request.challenge, slug=self.kwargs["slug"]
         )
 
     def get_form_kwargs(self):
@@ -873,8 +868,8 @@ class PhaseAlgorithmCreate(
 
     @cached_property
     def phase(self):
-        return Phase.objects.get(
-            slug=self.kwargs["slug"], challenge=self.request.challenge
+        return get_object_or_404(
+            Phase, slug=self.kwargs["slug"], challenge=self.request.challenge
         )
 
     def get_success_url(self):
@@ -1045,6 +1040,12 @@ class ConfigureAlgorithmPhasesView(PermissionRequiredMixin, FormView):
                 inputs=form.cleaned_data["algorithm_inputs"],
                 outputs=form.cleaned_data["algorithm_outputs"],
                 algorithm_time_limit=form.cleaned_data["algorithm_time_limit"],
+                algorithm_selectable_gpu_type_choices=form.cleaned_data[
+                    "algorithm_selectable_gpu_type_choices"
+                ],
+                algorithm_maximum_settable_memory_gb=form.cleaned_data[
+                    "algorithm_maximum_settable_memory_gb"
+                ],
             )
         messages.success(self.request, "Phases were successfully updated")
         return super().form_valid(form)
@@ -1055,7 +1056,14 @@ class ConfigureAlgorithmPhasesView(PermissionRequiredMixin, FormView):
         )
 
     def turn_phase_into_algorithm_phase(
-        self, *, phase, inputs, outputs, algorithm_time_limit
+        self,
+        *,
+        phase,
+        inputs,
+        outputs,
+        algorithm_time_limit,
+        algorithm_selectable_gpu_type_choices,
+        algorithm_maximum_settable_memory_gb,
     ):
         archive = Archive.objects.create(
             title=format_html(
@@ -1079,6 +1087,12 @@ class ConfigureAlgorithmPhasesView(PermissionRequiredMixin, FormView):
             archive.add_editor(user)
 
         phase.algorithm_time_limit = algorithm_time_limit
+        phase.algorithm_selectable_gpu_type_choices = (
+            algorithm_selectable_gpu_type_choices
+        )
+        phase.algorithm_maximum_settable_memory_gb = (
+            algorithm_maximum_settable_memory_gb
+        )
         phase.archive = archive
         phase.submission_kind = phase.SubmissionKindChoices.ALGORITHM
         phase.creator_must_be_verified = True

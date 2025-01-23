@@ -37,10 +37,10 @@ from grandchallenge.components.models import (  # noqa: F401
     ComponentInterfaceValue,
     ComponentJob,
     ComponentJobManager,
-    GPUTypeChoices,
     ImportStatusChoices,
     Tarball,
 )
+from grandchallenge.components.schemas import GPUTypeChoices
 from grandchallenge.core.guardian import get_objects_for_group
 from grandchallenge.core.models import RequestBase, UUIDModel
 from grandchallenge.core.storage import (
@@ -442,6 +442,10 @@ class Algorithm(UUIDModel, TitleSlugDescriptionModel, HangingProtocolMixin):
 
     def remove_user(self, user):
         return user.groups.remove(self.users_group)
+
+    @cached_property
+    def linked_component_interfaces(self):
+        return (self.inputs.all() | self.outputs.all()).distinct()
 
     @cached_property
     def user_statistics(self):
@@ -1348,3 +1352,6 @@ class OptionalHangingProtocolAlgorithm(models.Model):
     hanging_protocol = models.ForeignKey(
         "hanging_protocols.HangingProtocol", on_delete=models.CASCADE
     )
+
+    class Meta:
+        unique_together = (("algorithm", "hanging_protocol"),)

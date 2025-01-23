@@ -29,7 +29,7 @@ from grandchallenge.components.backends.utils import (
     parse_structured_log,
     user_error,
 )
-from grandchallenge.components.models import GPUTypeChoices
+from grandchallenge.components.schemas import GPUTypeChoices
 from grandchallenge.evaluation.utils import get
 
 logger = logging.getLogger(__name__)
@@ -859,7 +859,7 @@ class AmazonSageMakerBaseExecutor(Executor, ABC):
             raise RetryTask("No current capacity for the chosen instance type")
 
         if failure_reason == (
-            "InternalServerError: We encountered an internal error.  "
+            "InternalServerError: We encountered an internal error. "
             "Please try again."
         ):
             if (

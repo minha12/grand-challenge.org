@@ -24,13 +24,14 @@ from grandchallenge.components.form_fields import INTERFACE_FORM_FIELD_PREFIX
 from grandchallenge.components.models import (
     ComponentInterface,
     ComponentJob,
-    GPUTypeChoices,
     ImportStatusChoices,
     InterfaceKind,
 )
+from grandchallenge.components.schemas import GPUTypeChoices
 from grandchallenge.core.utils.access_requests import (
     AccessRequestHandlingOptions,
 )
+from grandchallenge.evaluation.utils import SubmissionKindChoices
 from grandchallenge.verifications.models import Verification
 from tests.algorithms_tests.factories import (
     AlgorithmFactory,
@@ -49,6 +50,7 @@ from tests.factories import (
     WorkstationFactory,
 )
 from tests.hanging_protocols_tests.factories import HangingProtocolFactory
+from tests.organizations_tests.factories import OrganizationFactory
 from tests.uploads_tests.factories import (
     UserUploadFactory,
     create_upload_from_file,
@@ -811,6 +813,259 @@ def test_algorithm_form_gpu_limited_choices():
     assert actual_choices == expected_choices
 
 
+@pytest.mark.django_db
+def test_algorithm_form_gpu_choices_from_phases():
+    user = UserFactory()
+    algorithm = AlgorithmFactory()
+    ci1, ci2, ci3, ci4, ci5, ci6 = ComponentInterfaceFactory.create_batch(6)
+    inputs = [ci1, ci2]
+    outputs = [ci3, ci4]
+    algorithm.inputs.set(inputs)
+    algorithm.outputs.set(outputs)
+
+    def assert_gpu_type_choices(expected_choices):
+        form = AlgorithmForm(instance=algorithm, user=user)
+
+        actual_choices = form.fields["job_requires_gpu_type"].choices
+
+        assert actual_choices == expected_choices
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases = []
+    for choice in [
+        GPUTypeChoices.A100,
+        GPUTypeChoices.A10G,
+        GPUTypeChoices.V100,
+        GPUTypeChoices.K80,
+    ]:
+        phase = PhaseFactory(
+            submission_kind=SubmissionKindChoices.ALGORITHM,
+            algorithm_selectable_gpu_type_choices=[
+                GPUTypeChoices.NO_GPU,
+                choice,
+                GPUTypeChoices.T4,
+            ],
+        )
+        phase.algorithm_inputs.set(inputs)
+        phase.algorithm_outputs.set(outputs)
+        phase.challenge.add_participant(user)
+        phases.append(phase)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.A10G, "NVIDIA A10G Tensor Core GPU"),
+            (GPUTypeChoices.V100, "NVIDIA V100 Tensor Core GPU"),
+            (GPUTypeChoices.K80, "NVIDIA K80 GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[3].challenge.remove_participant(user)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.A10G, "NVIDIA A10G Tensor Core GPU"),
+            (GPUTypeChoices.V100, "NVIDIA V100 Tensor Core GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[2].submission_kind = SubmissionKindChoices.CSV
+    phases[2].save()
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.A10G, "NVIDIA A10G Tensor Core GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[1].public = False
+    phases[1].save()
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[0].algorithm_inputs.set([ci1, ci5])
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[3].challenge.add_participant(user)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.K80, "NVIDIA K80 GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases[3].algorithm_outputs.set([ci4, ci6])
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+
+@pytest.mark.django_db
+def test_algorithm_form_gpu_choices_from_organizations():
+    user = UserFactory()
+    org1 = OrganizationFactory(
+        algorithm_selectable_gpu_type_choices=[
+            GPUTypeChoices.NO_GPU,
+            GPUTypeChoices.T4,
+            GPUTypeChoices.A100,
+        ],
+    )
+    org2 = OrganizationFactory(
+        algorithm_selectable_gpu_type_choices=[
+            GPUTypeChoices.NO_GPU,
+            GPUTypeChoices.T4,
+            GPUTypeChoices.V100,
+        ],
+    )
+
+    def assert_gpu_type_choices(expected_choices):
+        form = AlgorithmForm(user=user)
+
+        actual_choices = form.fields["job_requires_gpu_type"].choices
+
+        assert actual_choices == expected_choices
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    org1.add_member(user)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    org2.add_member(user)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.V100, "NVIDIA V100 Tensor Core GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+
+@pytest.mark.django_db
+def test_algorithm_form_gpu_choices_from_organizations_and_phases():
+    user = UserFactory()
+    algorithm = AlgorithmFactory()
+    ci1, ci2, ci3, ci4, ci5, ci6 = ComponentInterfaceFactory.create_batch(6)
+    inputs = [ci1, ci2]
+    outputs = [ci3, ci4]
+    algorithm.inputs.set(inputs)
+    algorithm.outputs.set(outputs)
+    org1 = OrganizationFactory(
+        algorithm_selectable_gpu_type_choices=[
+            GPUTypeChoices.NO_GPU,
+            GPUTypeChoices.A100,
+            GPUTypeChoices.T4,
+        ],
+    )
+    org2 = OrganizationFactory(
+        algorithm_selectable_gpu_type_choices=[
+            GPUTypeChoices.NO_GPU,
+            GPUTypeChoices.V100,
+            GPUTypeChoices.T4,
+        ],
+    )
+
+    def assert_gpu_type_choices(expected_choices):
+        form = AlgorithmForm(instance=algorithm, user=user)
+
+        actual_choices = form.fields["job_requires_gpu_type"].choices
+
+        assert actual_choices == expected_choices
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    phases = []
+    for choice in [
+        GPUTypeChoices.A10G,
+        GPUTypeChoices.K80,
+    ]:
+        phase = PhaseFactory(
+            submission_kind=SubmissionKindChoices.ALGORITHM,
+            algorithm_selectable_gpu_type_choices=[
+                GPUTypeChoices.NO_GPU,
+                choice,
+                GPUTypeChoices.T4,
+            ],
+        )
+        phase.algorithm_inputs.set(inputs)
+        phase.algorithm_outputs.set(outputs)
+        phase.challenge.add_participant(user)
+        phases.append(phase)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A10G, "NVIDIA A10G Tensor Core GPU"),
+            (GPUTypeChoices.K80, "NVIDIA K80 GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+    org1.add_member(user)
+    org2.add_member(user)
+
+    assert_gpu_type_choices(
+        [
+            (GPUTypeChoices.NO_GPU, "No GPU"),
+            (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+            (GPUTypeChoices.A10G, "NVIDIA A10G Tensor Core GPU"),
+            (GPUTypeChoices.V100, "NVIDIA V100 Tensor Core GPU"),
+            (GPUTypeChoices.K80, "NVIDIA K80 GPU"),
+            (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+        ]
+    )
+
+
 def test_algorithm_for_phase_form_gpu_limited_choices():
     form = AlgorithmForPhaseForm(
         workstation_config=WorkstationConfigFactory.build(),
@@ -839,6 +1094,41 @@ def test_algorithm_for_phase_form_gpu_limited_choices():
     assert actual_choices == expected_choices
 
 
+def test_algorithm_for_phase_form_gpu_additional_choices():
+    form = AlgorithmForPhaseForm(
+        workstation_config=WorkstationConfigFactory.build(),
+        hanging_protocol=HangingProtocolFactory.build(),
+        optional_hanging_protocols=[HangingProtocolFactory.build()],
+        view_content="{}",
+        display_editors=True,
+        contact_email="test@test.com",
+        workstation=WorkstationFactory.build(),
+        inputs=[ComponentInterfaceFactory.build()],
+        outputs=[ComponentInterfaceFactory.build()],
+        structures=[],
+        modalities=[],
+        logo=ImageField(filename="test.jpeg"),
+        phase=PhaseFactory.build(
+            algorithm_selectable_gpu_type_choices=[
+                GPUTypeChoices.NO_GPU,
+                GPUTypeChoices.T4,
+                GPUTypeChoices.A100,
+            ]
+        ),
+        user=UserFactory.build(),
+    )
+
+    expected_choices = [
+        (GPUTypeChoices.NO_GPU, "No GPU"),
+        (GPUTypeChoices.A100, "NVIDIA A100 Tensor Core GPU"),
+        (GPUTypeChoices.T4, "NVIDIA T4 Tensor Core GPU"),
+    ]
+
+    actual_choices = form.fields["job_requires_gpu_type"].choices
+
+    assert actual_choices == expected_choices
+
+
 @pytest.mark.django_db
 def test_algorithm_form_memory_limited():
     form = AlgorithmForm(user=UserFactory())
@@ -856,6 +1146,188 @@ def test_algorithm_form_memory_limited():
     )
     assert max_validator is not None
     assert max_validator.limit_value == 32
+
+
+@pytest.mark.django_db
+def test_algorithm_form_max_memory_from_phases_for_admins():
+    user = UserFactory()
+    algorithm = AlgorithmFactory()
+    ci1, ci2, ci3, ci4, ci5, ci6 = ComponentInterfaceFactory.create_batch(6)
+    inputs = [ci1, ci2]
+    outputs = [ci3, ci4]
+    algorithm.inputs.set(inputs)
+    algorithm.outputs.set(outputs)
+    phases = []
+    for max_memory in [42, 100, 200, 300, 400]:
+        phase = PhaseFactory(
+            submission_kind=SubmissionKindChoices.ALGORITHM,
+            algorithm_maximum_settable_memory_gb=max_memory,
+        )
+        phase.algorithm_inputs.set(inputs)
+        phase.algorithm_outputs.set(outputs)
+        phase.challenge.add_admin(user)
+        phases.append(phase)
+
+    def assert_max_value_validator(value):
+        form = AlgorithmForm(instance=algorithm, user=user)
+
+        validators = form.fields["job_requires_memory_gb"].validators
+
+        max_validator = next(
+            (v for v in validators if isinstance(v, MaxValueValidator)), None
+        )
+        assert max_validator is not None
+        assert max_validator.limit_value == value
+
+    assert_max_value_validator(400)
+
+    phases[4].public = False
+    phases[4].save()
+
+    assert_max_value_validator(400)
+
+    phases[4].challenge.remove_admin(user)
+
+    assert_max_value_validator(300)
+
+    phases[3].submission_kind = SubmissionKindChoices.CSV
+    phases[3].save()
+
+    assert_max_value_validator(200)
+
+    phases[2].algorithm_inputs.set([ci1, ci5])
+
+    assert_max_value_validator(100)
+
+    phases[1].algorithm_outputs.set([ci4, ci6])
+
+    assert_max_value_validator(42)
+
+
+@pytest.mark.django_db
+def test_algorithm_form_max_memory_from_phases():
+    user = UserFactory()
+    algorithm = AlgorithmFactory()
+    ci1, ci2, ci3, ci4, ci5, ci6 = ComponentInterfaceFactory.create_batch(6)
+    inputs = [ci1, ci2]
+    outputs = [ci3, ci4]
+    algorithm.inputs.set(inputs)
+    algorithm.outputs.set(outputs)
+    phases = []
+    for max_memory in [42, 100, 200, 300, 400, 500]:
+        phase = PhaseFactory(
+            submission_kind=SubmissionKindChoices.ALGORITHM,
+            algorithm_maximum_settable_memory_gb=max_memory,
+        )
+        phase.algorithm_inputs.set(inputs)
+        phase.algorithm_outputs.set(outputs)
+        phase.challenge.add_participant(user)
+        phases.append(phase)
+
+    def assert_max_value_validator(value):
+        form = AlgorithmForm(instance=algorithm, user=user)
+
+        validators = form.fields["job_requires_memory_gb"].validators
+
+        max_validator = next(
+            (v for v in validators if isinstance(v, MaxValueValidator)), None
+        )
+        assert max_validator is not None
+        assert max_validator.limit_value == value
+
+    assert_max_value_validator(500)
+
+    phases[5].challenge.remove_participant(user)
+
+    assert_max_value_validator(400)
+
+    phases[4].submission_kind = SubmissionKindChoices.CSV
+    phases[4].save()
+
+    assert_max_value_validator(300)
+
+    phases[3].public = False
+    phases[3].save()
+
+    assert_max_value_validator(200)
+
+    phases[2].algorithm_inputs.set([ci1, ci5])
+
+    assert_max_value_validator(100)
+
+    phases[1].algorithm_outputs.set([ci4, ci6])
+
+    assert_max_value_validator(42)
+
+
+@pytest.mark.django_db
+def test_algorithm_form_max_memory_from_organizations():
+    user = UserFactory()
+    org1 = OrganizationFactory(algorithm_maximum_settable_memory_gb=42)
+    org2 = OrganizationFactory(algorithm_maximum_settable_memory_gb=1337)
+
+    def assert_max_value_validator(value):
+        form = AlgorithmForm(user=user)
+
+        validators = form.fields["job_requires_memory_gb"].validators
+
+        max_validator = next(
+            (v for v in validators if isinstance(v, MaxValueValidator)), None
+        )
+        assert max_validator is not None
+        assert max_validator.limit_value == value
+
+    assert_max_value_validator(32)
+
+    org1.add_member(user)
+
+    assert_max_value_validator(42)
+
+    org2.add_member(user)
+
+    assert_max_value_validator(1337)
+
+
+@pytest.mark.django_db
+def test_algorithm_form_max_memory_from_organizations_and_phases():
+    user = UserFactory()
+    algorithm = AlgorithmFactory()
+    ci1, ci2, ci3, ci4, ci5, ci6 = ComponentInterfaceFactory.create_batch(6)
+    inputs = [ci1, ci2]
+    outputs = [ci3, ci4]
+    algorithm.inputs.set(inputs)
+    algorithm.outputs.set(outputs)
+    org1 = OrganizationFactory(algorithm_maximum_settable_memory_gb=42)
+    org2 = OrganizationFactory(algorithm_maximum_settable_memory_gb=1337)
+
+    def assert_max_value_validator(value):
+        form = AlgorithmForm(instance=algorithm, user=user)
+
+        validators = form.fields["job_requires_memory_gb"].validators
+
+        max_validator = next(
+            (v for v in validators if isinstance(v, MaxValueValidator)), None
+        )
+        assert max_validator is not None
+        assert max_validator.limit_value == value
+
+    assert_max_value_validator(32)
+
+    for max_memory in [41, 42]:
+        phase = PhaseFactory(
+            submission_kind=SubmissionKindChoices.ALGORITHM,
+            algorithm_maximum_settable_memory_gb=max_memory,
+        )
+        phase.algorithm_inputs.set(inputs)
+        phase.algorithm_outputs.set(outputs)
+        phase.challenge.add_participant(user)
+
+    assert_max_value_validator(42)
+
+    org1.add_member(user)
+    org2.add_member(user)
+
+    assert_max_value_validator(1337)
 
 
 def test_algorithm_for_phase_form_memory_limited():
@@ -889,3 +1361,30 @@ def test_algorithm_for_phase_form_memory_limited():
     )
     assert max_validator is not None
     assert max_validator.limit_value == 32
+
+
+def test_algorithm_for_phase_form_memory():
+    form = AlgorithmForPhaseForm(
+        workstation_config=WorkstationConfigFactory.build(),
+        hanging_protocol=HangingProtocolFactory.build(),
+        optional_hanging_protocols=[HangingProtocolFactory.build()],
+        view_content="{}",
+        display_editors=True,
+        contact_email="test@test.com",
+        workstation=WorkstationFactory.build(),
+        inputs=[ComponentInterfaceFactory.build()],
+        outputs=[ComponentInterfaceFactory.build()],
+        structures=[],
+        modalities=[],
+        logo=ImageField(filename="test.jpeg"),
+        phase=PhaseFactory.build(algorithm_maximum_settable_memory_gb=42),
+        user=UserFactory.build(),
+    )
+
+    validators = form.fields["job_requires_memory_gb"].validators
+
+    max_validator = next(
+        (v for v in validators if isinstance(v, MaxValueValidator)), None
+    )
+    assert max_validator is not None
+    assert max_validator.limit_value == 42

@@ -13,10 +13,10 @@ from guardian.shortcuts import assign_perm, remove_perm
 from grandchallenge.algorithms.models import Algorithm
 from grandchallenge.components.models import (
     ComponentInterface,
-    GPUTypeChoices,
     ImportStatusChoices,
     InterfaceKindChoices,
 )
+from grandchallenge.components.schemas import GPUTypeChoices
 from grandchallenge.core.templatetags.remove_whitespace import oxford_comma
 from grandchallenge.evaluation.models import (
     CombinedLeaderboard,
@@ -682,21 +682,6 @@ def test_create_algorithm_for_phase_permission(client, uploaded_image):
         user=admin,
     )
     assert response.status_code == 403
-    assert "You need to verify your account before you can do this" in str(
-        response.content
-    )
-
-    VerificationFactory(user=admin, is_verified=True)
-    response = get_view_for_user(
-        viewname="evaluation:phase-algorithm-create",
-        reverse_kwargs={
-            "slug": phase.slug,
-            "challenge_short_name": phase.challenge.short_name,
-        },
-        client=client,
-        user=admin,
-    )
-    assert response.status_code == 403
     assert (
         "You need to first upload a logo for your challenge before you can create algorithms for its phases."
         in str(response.content)
@@ -724,6 +709,21 @@ def test_create_algorithm_for_phase_permission(client, uploaded_image):
     phase.algorithm_inputs.set([ComponentInterfaceFactory()])
     phase.algorithm_outputs.set([ComponentInterfaceFactory()])
     phase.save()
+
+    response = get_view_for_user(
+        viewname="evaluation:phase-algorithm-create",
+        reverse_kwargs={
+            "slug": phase.slug,
+            "challenge_short_name": phase.challenge.short_name,
+        },
+        client=client,
+        user=admin,
+    )
+    assert "You need to verify your account before you can do this" in str(
+        response.content
+    )
+
+    VerificationFactory(user=admin, is_verified=True)
     response = get_view_for_user(
         viewname="evaluation:phase-algorithm-create",
         reverse_kwargs={
@@ -748,11 +748,13 @@ def test_create_algorithm_for_phase_permission(client, uploaded_image):
         user=participant,
     )
     assert response.status_code == 403
-    assert "You need to verify your account before you can do this" in str(
+    assert "The phase is currently not open for submissions." in str(
         response.content
     )
 
-    VerificationFactory(user=participant, is_verified=True)
+    phase.submissions_limit_per_user_per_period = 1
+    phase.save()
+
     response = get_view_for_user(
         viewname="evaluation:phase-algorithm-create",
         reverse_kwargs={
@@ -763,13 +765,11 @@ def test_create_algorithm_for_phase_permission(client, uploaded_image):
         user=participant,
     )
     assert response.status_code == 403
-    assert "The phase is currently not open for submissions." in str(
+    assert "You need to verify your account before you can do this" in str(
         response.content
     )
 
-    phase.submissions_limit_per_user_per_period = 1
-    phase.save()
-
+    VerificationFactory(user=participant, is_verified=True)
     response = get_view_for_user(
         viewname="evaluation:phase-algorithm-create",
         reverse_kwargs={
@@ -1391,6 +1391,14 @@ def test_configure_algorithm_phases_view(client):
         phase.algorithm_time_limit
         == challenge_request.inference_time_limit_in_minutes * 60
     )
+    assert (
+        phase.algorithm_selectable_gpu_type_choices
+        == challenge_request.algorithm_selectable_gpu_type_choices
+    )
+    assert (
+        phase.algorithm_maximum_settable_memory_gb
+        == challenge_request.algorithm_maximum_settable_memory_gb
+    )
 
 
 @pytest.mark.django_db
@@ -1601,6 +1609,8 @@ def test_submission_create_sets_limits_correctly_with_algorithm(client):
         archive=archive,
         submission_kind=SubmissionKindChoices.ALGORITHM,
         submissions_limit_per_user_per_period=1,
+        algorithm_selectable_gpu_type_choices=[GPUTypeChoices.V100],
+        algorithm_maximum_settable_memory_gb=1337,
     )
     phase.algorithm_inputs.set(inputs)
     phase.algorithm_outputs.set(outputs)

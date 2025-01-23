@@ -33,9 +33,13 @@ from grandchallenge.components.models import (
     ComponentImage,
     ComponentInterface,
     ComponentJob,
-    GPUTypeChoices,
     ImportStatusChoices,
     Tarball,
+)
+from grandchallenge.components.schemas import (
+    SELECTABLE_GPU_TYPES_SCHEMA,
+    GPUTypeChoices,
+    get_default_gpu_type_choices,
 )
 from grandchallenge.core.models import (
     FieldChangeMixin,
@@ -475,6 +479,24 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
         blank=True,
         help_text="The output interfaces that the algorithms for this phase must use",
     )
+    algorithm_selectable_gpu_type_choices = models.JSONField(
+        default=get_default_gpu_type_choices,
+        help_text=(
+            "The GPU type choices that participants will be able to select for their "
+            "algorithm inference jobs. The setting on the algorithm will be "
+            "validated against this on submission. Options are "
+            f"{GPUTypeChoices.values}.".replace("'", '"')
+        ),
+        validators=[JSONValidator(schema=SELECTABLE_GPU_TYPES_SCHEMA)],
+    )
+    algorithm_maximum_settable_memory_gb = models.PositiveSmallIntegerField(
+        default=settings.ALGORITHMS_MAX_MEMORY_GB,
+        help_text=(
+            "Maximum amount of memory that participants will be allowed to "
+            "assign to algorithm inference jobs for submission. The setting on the "
+            "algorithm will be validated against this on submission."
+        ),
+    )
     algorithm_time_limit = models.PositiveIntegerField(
         default=20 * 60,
         help_text="Time limit for inference jobs in seconds",
@@ -516,6 +538,16 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
             ),
         ],
     )
+    evaluation_selectable_gpu_type_choices = models.JSONField(
+        default=get_default_gpu_type_choices,
+        help_text=(
+            "The GPU type choices that challenge admins will be able to set for the "
+            f"evaluation method. Options are {GPUTypeChoices.values}.".replace(
+                "'", '"'
+            )
+        ),
+        validators=[JSONValidator(schema=SELECTABLE_GPU_TYPES_SCHEMA)],
+    )
     evaluation_requires_gpu_type = models.CharField(
         max_length=4,
         blank=True,
@@ -525,6 +557,13 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
             "What GPU to attach to this phases evaluations. "
             "Note that the GPU attached to any algorithm inference jobs "
             "is determined by the submitted algorithm."
+        ),
+    )
+    evaluation_maximum_settable_memory_gb = models.PositiveSmallIntegerField(
+        default=settings.ALGORITHMS_MAX_MEMORY_GB,
+        help_text=(
+            "Maximum amount of memory that challenge admins will be able to "
+            "assign for the evaluation method."
         ),
     )
     evaluation_requires_memory_gb = models.PositiveSmallIntegerField(
@@ -619,7 +658,7 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
     def __str__(self):
         return f"{self.title} Evaluation for {self.challenge.short_name}"
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, skip_calculate_ranks=False, **kwargs):
         adding = self._state.adding
 
         super().save(*args, **kwargs)
@@ -655,9 +694,12 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
         ):
             self.send_give_algorithm_editors_job_view_permissions_changed_email()
 
-        on_commit(
-            lambda: calculate_ranks.apply_async(kwargs={"phase_pk": self.pk})
-        )
+        if not skip_calculate_ranks:
+            on_commit(
+                lambda: calculate_ranks.apply_async(
+                    kwargs={"phase_pk": self.pk}
+                )
+            )
 
     def clean(self):
         super().clean()
@@ -665,6 +707,7 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
         self._clean_submission_limits()
         self._clean_parent_phase()
         self._clean_external_evaluation()
+        self._clean_evaluation_requirements()
 
     def _clean_algorithm_submission_settings(self):
         if self.submission_kind == SubmissionKindChoices.ALGORITHM:
@@ -743,6 +786,27 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
                     "An external evaluation phase must have a parent phase."
                 )
 
+    def _clean_evaluation_requirements(self):
+        if (
+            self.evaluation_requires_gpu_type
+            not in self.evaluation_selectable_gpu_type_choices
+        ):
+            raise ValidationError(
+                f"{self.evaluation_requires_gpu_type!r} is not a valid choice "
+                f"for Evaluation requires gpu type. Either change the choice or "
+                f"add it to the list of selectable gpu types."
+            )
+        if (
+            self.evaluation_requires_memory_gb
+            > self.evaluation_maximum_settable_memory_gb
+        ):
+            raise ValidationError(
+                f"Ensure the value for Evaluation requires memory gb (currently "
+                f"{self.evaluation_requires_memory_gb}) is less than or equal "
+                f"to the maximum settable (currently "
+                f"{self.evaluation_maximum_settable_memory_gb})."
+            )
+
     @property
     def scoring_method(self):
         if self.scoring_method_choice == self.ABSOLUTE:
@@ -813,6 +877,12 @@ class Phase(FieldChangeMixin, HangingProtocolMixin, UUIDModel):
         self.outputs.set(
             [ComponentInterface.objects.get(slug="metrics-json-file")]
         )
+
+    @cached_property
+    def linked_component_interfaces(self):
+        return (
+            self.algorithm_inputs.all() | self.algorithm_outputs.all()
+        ).distinct()
 
     def assign_permissions(self):
         assign_perm("view_phase", self.challenge.admins_group, self)
@@ -1897,6 +1967,9 @@ class CombinedLeaderboardPhase(models.Model):
         CombinedLeaderboard, on_delete=models.CASCADE
     )
 
+    class Meta:
+        unique_together = (("phase", "combined_leaderboard"),)
+
 
 class OptionalHangingProtocolPhase(models.Model):
     # Through table for optional hanging protocols
@@ -1905,3 +1978,6 @@ class OptionalHangingProtocolPhase(models.Model):
     hanging_protocol = models.ForeignKey(
         "hanging_protocols.HangingProtocol", on_delete=models.CASCADE
     )
+
+    class Meta:
+        unique_together = (("phase", "hanging_protocol"),)

@@ -16,6 +16,7 @@ from grandchallenge.components.form_fields import INTERFACE_FORM_FIELD_PREFIX
 from grandchallenge.components.models import ComponentInterface, InterfaceKind
 from grandchallenge.notifications.models import Notification
 from grandchallenge.subdomains.utils import reverse
+from grandchallenge.uploads.models import UserUpload
 from tests.algorithms_tests.factories import AlgorithmJobFactory, Job
 from tests.archives_tests.factories import (
     ArchiveFactory,
@@ -313,8 +314,11 @@ def test_api_archive_item_add_and_update_value(
     editor = UserFactory()
     archive.add_editor(editor)
     item = ArchiveItemFactory(archive=archive)
-    ci = ComponentInterfaceFactory(
+    ci_bool = ComponentInterfaceFactory(
         kind=InterfaceKind.InterfaceKindChoices.BOOL
+    )
+    ci_int = ComponentInterfaceFactory(
+        kind=InterfaceKind.InterfaceKindChoices.INTEGER
     )
 
     # add civ
@@ -322,7 +326,39 @@ def test_api_archive_item_add_and_update_value(
         response = get_view_for_user(
             viewname="api:archives-item-detail",
             reverse_kwargs={"pk": item.pk},
-            data={"values": [{"interface": ci.slug, "value": True}]},
+            data={
+                "values": [
+                    {"interface": ci_bool.slug, "value": True},
+                    {"interface": ci_int.slug, "value": 42},
+                ]
+            },
+            user=editor,
+            client=client,
+            method=client.patch,
+            content_type="application/json",
+            HTTP_X_FORWARDED_PROTO="https",
+        )
+    recurse_callbacks(
+        callbacks=callbacks,
+        django_capture_on_commit_callbacks=django_capture_on_commit_callbacks,
+    )
+
+    assert response.status_code == 200, response.content
+    assert response.json()["pk"] == str(item.pk)
+    item.refresh_from_db()
+
+    assert item.values.count() == 2
+    civ_bool = item.values.filter(interface__slug=ci_bool.slug).get()
+    assert civ_bool.value
+    civ_int = item.values.filter(interface__slug=ci_int.slug).get()
+    assert civ_int.value == 42
+
+    # (partial) update civ
+    with django_capture_on_commit_callbacks() as callbacks:
+        response = get_view_for_user(
+            viewname="api:archives-item-detail",
+            reverse_kwargs={"pk": item.pk},
+            data={"values": [{"interface": ci_bool.slug, "value": False}]},
             user=editor,
             client=client,
             method=client.patch,
@@ -337,20 +373,19 @@ def test_api_archive_item_add_and_update_value(
     assert response.status_code == 200
     assert response.json()["pk"] == str(item.pk)
     item.refresh_from_db()
-    assert item.values.count() == 1
-    civ = item.values.get()
-    assert civ.interface.slug == ci.slug
-    assert civ.value
+    assert item.values.count() == 2
+    new_civ_bool = item.values.filter(interface__slug=ci_bool.slug).get()
+    assert not new_civ_bool.value
 
     # update civ
     with django_capture_on_commit_callbacks() as callbacks:
         response = get_view_for_user(
             viewname="api:archives-item-detail",
             reverse_kwargs={"pk": item.pk},
-            data={"values": [{"interface": ci.slug, "value": False}]},
+            data={"values": [{"interface": ci_int.slug, "value": 7}]},
             user=editor,
             client=client,
-            method=client.patch,
+            method=client.put,
             content_type="application/json",
             HTTP_X_FORWARDED_PROTO="https",
         )
@@ -363,9 +398,10 @@ def test_api_archive_item_add_and_update_value(
     assert response.json()["pk"] == str(item.pk)
     item.refresh_from_db()
     assert item.values.count() == 1
-    new_civ = item.values.get()
-    assert new_civ.interface.slug == ci.slug
-    assert new_civ != civ
+
+    new_civ_int = item.values.get()
+    assert new_civ_int.value == 7
+    assert new_civ_int != civ_int
 
 
 @pytest.mark.django_db
@@ -413,8 +449,9 @@ def test_api_archive_item_add_and_update_non_image_file(
     assert item.values.count() == 1
     civ = item.values.get()
     assert civ.interface.slug == ci.slug
+    assert not UserUpload.objects.filter(pk=upload.pk).exists()
 
-    # update civ
+    # partial update civ
     upload2 = create_upload_from_file(
         creator=editor, file_path=RESOURCE_PATH / "test.zip"
     )
@@ -446,6 +483,7 @@ def test_api_archive_item_add_and_update_non_image_file(
     new_civ = item.values.get()
     assert new_civ.interface.slug == ci.slug
     assert new_civ != civ
+    assert not UserUpload.objects.filter(pk=upload2.pk).exists()
 
 
 @pytest.mark.django_db
@@ -603,6 +641,7 @@ def test_api_archive_item_add_and_update_json_file(
     assert item.values.count() == 1
     civ = item.values.get()
     assert civ.interface.slug == ci.slug
+    assert not UserUpload.objects.filter(pk=upload.pk).exists()
 
     # update civ
     with tempfile.NamedTemporaryFile(mode="w+", suffix=".json") as file:
@@ -638,6 +677,7 @@ def test_api_archive_item_add_and_update_json_file(
     new_civ = item.values.get()
     assert new_civ.interface.slug == ci.slug
     assert new_civ != civ
+    assert not UserUpload.objects.filter(pk=upload2.pk).exists()
 
 
 @pytest.mark.django_db
@@ -898,6 +938,7 @@ def test_archive_item_add_file(
                     )
                 },
             )
+    assert not UserUpload.objects.filter(pk=upload.pk).exists()
     assert response.status_code == 302
     assert "test" in ArchiveItem.objects.get().values.first().file.name
 
@@ -941,6 +982,7 @@ def test_archive_item_add_json_file(
                 )
         assert response.status_code == 302
         assert file.name.split("/")[-1] in item.values.first().file.name
+        assert not UserUpload.objects.filter(pk=upload.pk).exists()
 
     item2 = ArchiveItemFactory(archive=archive)
     civ = ComponentInterfaceValueFactory(
@@ -1139,6 +1181,7 @@ def test_archive_item_create_view(
     assert ai2.values.get(interface=ci_img2).image == image
     assert ai2.values.get(interface=ci_json).file.read() == b'{"foo": "bar"}'
     assert ai2.values.get(interface=ci_json2).value == {"some": "content"}
+    assert not UserUpload.objects.filter(pk=upload.pk).exists()
 
 
 @pytest.mark.django_db

@@ -227,6 +227,36 @@ def remove_container_image_from_registry(
     model = apps.get_model(app_label=app_label, model_name=model_name)
     instance = model.objects.get(pk=pk)
 
+    from grandchallenge.algorithms.models import AlgorithmImage, Job
+    from grandchallenge.evaluation.models import Evaluation, Method
+
+    instance_in_use = False
+
+    if isinstance(instance, Method):
+        instance_in_use = (
+            Evaluation.objects.filter(
+                method=instance,
+            )
+            .active()
+            .exists()
+        )
+    elif isinstance(instance, AlgorithmImage):
+        instance_in_use = (
+            Evaluation.objects.filter(
+                submission__algorithm_image=instance,
+            )
+            .active()
+            .exists()
+            or Job.objects.filter(
+                algorithm_image=instance,
+            )
+            .active()
+            .exists()
+        )
+
+    if instance_in_use:
+        return
+
     if instance.latest_shimmed_version:
         remove_tag_from_registry(repo_tag=instance.shimmed_repo_tag)
         instance.latest_shimmed_version = ""
@@ -691,7 +721,7 @@ def execute_job(  # noqa: C901
         raise PriorStepFailed("Job is not set to be executed")
 
     if not job.container.can_execute:
-        msg = f"Method {job.container.pk} was not ready to be used"
+        msg = f"Container Image {job.container.pk} was not ready to be used"
         job.update_status(status=job.FAILURE, error_message=msg)
         raise PriorStepFailed(msg)
 
@@ -1292,6 +1322,7 @@ def add_file_to_object(
         civ.full_clean()
         civ.save()
         user_upload.copy_object(to_field=civ.file)
+        user_upload.delete()
     except ValidationError as e:
         error_handler.handle_error(
             interface=interface,
