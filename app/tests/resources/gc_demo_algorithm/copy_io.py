@@ -179,3 +179,4 @@ if __name__ == "__main__":
     print("CPU Load Complete")
 
     create_output()
+    print("Created output")
