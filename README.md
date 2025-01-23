@@ -34,7 +34,7 @@ To use a local instance of Grand Challenge, follow these steps:
    * Use this token with the Apache Airflow module to access claimable evaluations
 
 To create a claimable evaluation:
-1. Log in as demo
+1. Log in as demop
 2. Go to the challenge
 3. Submit to the Algorithm Evaluation phase
 4. Once completed, submit to the External Algorithm Evaluation phase
