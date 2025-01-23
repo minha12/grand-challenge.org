@@ -82,10 +82,13 @@ This workflow enables hosting a challenge on Grand-Challenge where **data remain
 ### **Visual Workflow**
 ```mermaid
 graph TD
-  A[Grand-Challenge] -->|Creates Claimable Evaluation| B(Third-Party Host)
-  B -->|1. Poll/Claim via API Token| A
-  B -->|2. Process Data Locally| B
-  B -->|3. Submit Results to Grand-Challenge| A
+    GC[Grand Challenge Platform] -->|Creates Claimable Evaluation| TPH[Third-Party Host]
+    TPH -->|1. Polls API & Claims Task| GC
+    TPH -->|2. Downloads & Processes Data| TPH
+    TPH -->|3. Submits Results via API| GC
+    
+    style GC fill:#f9f,stroke:#333,stroke-width:2px
+    style TPH fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 This setup is ideal for privacy-sensitive challenges (e.g., medical imaging) where data cannot be centralized. Grand-Challenge manages the challenge lifecycle, while external partners handle computation securely.
