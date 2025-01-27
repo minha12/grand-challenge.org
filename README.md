@@ -166,3 +166,39 @@ To avoid confusion, use **role-specific names** that clearly reflect their purpo
 
 ---
 
+### **Demo Algorithm Image**
+
+The demo algorithm image is located in `/app/tests/resources/gc_demo_algorithm/` and serves as a test container for external evaluation workflows. It consists of:
+
+- **Dockerfile**: Creates a Python 3.11 environment with minimal dependencies
+- **copy_io.py**: A diagnostic script that performs system checks and I/O operations
+
+#### **What the Demo Algorithm Does**:
+1. **System Information**:
+   - Prints current user and group information
+   - Lists all environment variables
+   - Tests internet connectivity
+   - Displays disk partition information
+   - Reports memory usage
+   - Checks CUDA availability
+
+2. **File Operations**:
+   - Tests temporary file creation
+   - Verifies file permissions
+   - Generates brief CPU load
+
+3. **Input/Output Processing**:
+   - Reads all files from `/input` directory
+   - Attempts to parse files as JSON
+   - Copies all input files to `/output`
+   - Creates `results.json` and `metrics.json` with:
+     - A dummy score (value: 1)
+     - Contents of all input files
+
+#### **Usage**:
+- This image is automatically built when running `make external_algorithm_evaluation_fixtures`
+- It's used to simulate algorithm submissions in the development environment
+- Helps verify the external evaluation workflow without complex processing
+
+---
+
