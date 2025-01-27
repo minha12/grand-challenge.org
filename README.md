@@ -82,9 +82,9 @@ This workflow enables hosting a challenge on Grand-Challenge where **data remain
 ### **Visual Workflow**
 ```mermaid
 graph TD
-  A[Grand-Challenge] -->|Creates Claimable Evaluation| B(Third-Party Host)
+  A[Grand-Challenge] -->|Creates Claimable Evaluation| B[BigPicture]
   B -->|1-Poll/Claim via API Token|A
-  B -->|2-Process Data Locally| B
+  B -->|2-Process Data Locally| C(Dataset)
   B -->|3-Submit Results to Grand-Challenge| A
 ```
 
