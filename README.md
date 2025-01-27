@@ -145,7 +145,7 @@ To avoid confusion, use **role-specific names** that clearly reflect their purpo
 | **Superuser**          | `admin`                    | Default admin account; no change needed.                                        |
 | **Evaluator**          | `external_evaluator`       | User responsible for claiming and processing evaluations externally.            |
 | **Participant**        | `challenge_participant`    | User who submits algorithms to the challenge.                                   |
-| **Evaluation Engine** |    `bigpicture_evaluator`     | Service that uses API token to claim/submit evaluations.|
+| **Evaluation Engine** |    `bigpicture_evaluation_engine`     | Service that uses API token to claim/submit evaluations.|
 
 ---
 
