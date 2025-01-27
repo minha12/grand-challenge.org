@@ -44,7 +44,7 @@ This workflow enables hosting a challenge on Grand-Challenge where **data remain
 ### **4. Evaluator Setup**
 
 #### **Step 4: API Token for Automation**
-- **Purpose**: Authenticate external systems (e.g., Apache Airflow) without sharing passwords.
+- **Purpose**: Authenticate external systems (e.g., BP's evaluation engine, Apache Airflow) without sharing passwords.
 - **Steps**:
   1. Log in as the `demo` user (password: `demo`).
   2. Generate an **API token** in profile settings.  
@@ -110,7 +110,7 @@ This setup is ideal for privacy-sensitive challenges (e.g., medical imaging) whe
 - **Purpose**: An external evaluator who processes data on a third-party server and submits results to Grand-Challenge.
 - **How It’s Used**:
   - Added to the `algorithm-evaluation-1_external_evaluators` group via Django Admin.
-  - Generates an **API token** to authenticate automated workflows (e.g., Apache Airflow).
+  - Generates an **API token** to authenticate automated workflows (e.g., BP's evaluation engine, Apache Airflow).
   - Claims evaluations and submits results programmatically.
 - **Key Actions**:
   - Uses the API token to poll for and claim evaluations.
@@ -160,9 +160,9 @@ To avoid confusion, use **role-specific names** that clearly reflect their purpo
 
 3. **Evaluator (`external_evaluator`)**:
    - Generates an API token.
-   - Uses the token to claim evaluations and submit results via Apache Airflow.
+   - Uses the token to claim evaluations and submit results via BP's evaluation engine.
 
-4. **Automation Account (`airflow_bot`)** *(optional)*:
+4. **Automation Account**:
    - Dedicated service account for programmatic interactions (avoids tying API tokens to human users).
 
 ---
@@ -170,4 +170,4 @@ To avoid confusion, use **role-specific names** that clearly reflect their purpo
 ### **Key Takeaways**
 - **Avoid Ambiguous Names**: Use distinct names like `external_evaluator` and `challenge_participant` instead of `demo`/`demop`.
 - **Separate Roles**: Keep evaluators (external processors) and participants (submitters) as separate users.
-- **Service Accounts**: For automated workflows, create dedicated accounts (e.g., `airflow_bot`) instead of reusing human user accounts.
+- **Service Accounts**: For automated workflows, create dedicated accounts instead of reusing human user accounts.
