@@ -166,7 +166,3 @@ To avoid confusion, use **role-specific names** that clearly reflect their purpo
 
 ---
 
-### **Key Takeaways**
-- **Avoid Ambiguous Names**: Use distinct names like `external_evaluator` and `challenge_participant` instead of `demo`/`demop`.
-- **Separate Roles**: Keep evaluators (external processors) and participants (submitters) as separate users.
-- **Service Accounts**: For automated workflows, create dedicated accounts instead of reusing human user accounts.
