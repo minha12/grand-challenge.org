@@ -134,7 +134,6 @@ This setup is ideal for privacy-sensitive challenges (e.g., medical imaging) whe
 - **`demo` vs. `demop`**: 
   - `demo` is the **evaluator** (responsible for processing data externally). 
   - `demop` is the **participant** (submits algorithms to the challenge). 
-  - The similarity in names (`demo`/`demop`) is likely a typo or a naming oversight in the example, which can lead to mix-ups.
 
 ---
 
