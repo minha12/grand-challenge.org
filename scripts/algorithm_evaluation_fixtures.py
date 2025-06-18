@@ -58,7 +58,7 @@ def _get_users():
 
 def _get_inputs():
     return ComponentInterface.objects.filter(
-        slug__in=["generic-medical-image"]
+        slug__in=["generic-medical-image", "generic-overlay"]
     )
 
 
