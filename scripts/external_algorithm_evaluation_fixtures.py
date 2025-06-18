@@ -5,6 +5,7 @@ from knox.models import AuthToken, hash_token
 from knox.settings import CONSTANTS
 
 from grandchallenge.challenges.models import Challenge
+from grandchallenge.components.models import ComponentInterface
 from grandchallenge.evaluation.models import Phase
 from grandchallenge.evaluation.utils import SubmissionKindChoices
 from grandchallenge.verifications.models import Verification
@@ -16,6 +17,7 @@ from scripts.algorithm_evaluation_fixtures import (
     _get_outputs,
     _get_users,
 )
+from grandchallenge.algorithms.models import AlgorithmImage # Keep this import
 
 
 def run():
@@ -24,8 +26,13 @@ def run():
     evaluator = _get_or_create_evaluator()
 
     users = _get_users()
-    inputs = _get_inputs()
+    inputs = []  # Convert QuerySet to list
     outputs = _get_outputs()
+    
+    # Add new custom interfaces
+    custom_interfaces = create_custom_interfaces()
+    inputs.extend(custom_interfaces)  # Now this will work with a list
+
     challenge_count = Challenge.objects.count()
     archive = _create_archive(
         creator=users["demo"],
@@ -41,6 +48,8 @@ def run():
         inputs=inputs,
         outputs=outputs,
     )
+    
+    # Capture the algorithm and algorithm_image instances
     _create_algorithm(
         creator=users["demop"],
         inputs=inputs,
@@ -69,7 +78,7 @@ def _create_external_evaluation_phase(
 
     p.title = "External Algorithm Evaluation"
     p.submission_kind = SubmissionKindChoices.ALGORITHM
-    p.parent = existing_phase
+    # p.parent = existing_phase
     p.external_evaluation = True
     p.score_jsonpath = "score"
     p.submissions_limit_per_user_per_period = 10
@@ -125,3 +134,38 @@ def _get_or_create_evaluator():
     ).save()
 
     return user
+
+
+def create_custom_interfaces():
+    from grandchallenge.components.models import ComponentInterface
+    
+    # First try to get interfaces by slug if they exist
+    interfaces = []
+    
+    # Try to get HE Staining interface
+    try:
+        he_staining = ComponentInterface.objects.get(slug="he-staining")
+        interfaces.append(he_staining)
+    except ComponentInterface.DoesNotExist:
+        # Create it if it doesn't exist
+        he_staining = ComponentInterface.objects.create(
+            title="HE Staining",
+            kind=ComponentInterface.Kind.IMAGE,
+            relative_path=f"images/he-staining"  # Make unique
+        )
+        interfaces.append(he_staining)
+    
+    # Try to get Tissue Mask interface
+    try:
+        tissue_mask = ComponentInterface.objects.get(slug="tissue-mask")
+        interfaces.append(tissue_mask)
+    except ComponentInterface.DoesNotExist:
+        # Create it if it doesn't exist
+        tissue_mask = ComponentInterface.objects.create(
+            title="Tissue Mask",
+            kind=ComponentInterface.Kind.IMAGE,
+            relative_path=f"images/tissue-mask"  # Make unique
+        )
+        interfaces.append(tissue_mask)
+    
+    return interfaces
